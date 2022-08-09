@@ -1,14 +1,12 @@
 #ifndef CR2_HEADER_H
 #define CR2_HEADER_H
 
-#define HEADER_SIZE 0x13
-
-struct CanonHeader
+struct CR2Header
 {
 	unsigned char ByteOrdering[2];
 	short TiffMagicWord;
 	long TiffOffset;
-	char CR2MagicWord;
+	short CR2MagicWord;
 	char CR2VerMajor;
 	char CR2VerMinor;
 	long RawIFDOffset;
