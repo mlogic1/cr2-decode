@@ -12,9 +12,9 @@ static CR2Header _C2DDecodeHeader(char* headerBin)
 {
 	CR2Header header;
 	memcpy(header.ByteOrdering, headerBin, 2);
-	header.TiffMagicWord = (short)headerBin[2];	// this probably needs memcpy
-	header.TiffOffset = (long)headerBin[4];		// this probably needs memcpy
-	memcpy(&header.CR2MagicWord, headerBin + 8, 2);	// this one is copied in the reverse order, its 0x5243 - check is it the same on windows and fix
+	memcpy(&header.TiffMagicWord, headerBin + 2, 2);
+	memcpy(&header.TiffOffset, headerBin + 4, 4);
+	memcpy(&header.CR2MagicWord, headerBin + 8, 2);			// this one is copied in the reverse order, its 0x5243 - check is it the same on windows and fix
 	header.CR2VerMajor = headerBin[10];
 	header.CR2VerMinor = headerBin[11];
 	memcpy(&header.RawIFDOffset, headerBin + 12, sizeof(long));
