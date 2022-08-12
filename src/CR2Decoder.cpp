@@ -14,7 +14,10 @@ static void _C2DDecodeHeader(CR2Header* header, std::ifstream& fStream)
 	fStream.read((char*)&header->ByteOrdering, 2);
 	fStream.read((char*)&header->TiffMagicWord, 2);
 	fStream.read((char*)&header->TiffOffset, 4);
-	fStream.read((char*)&header->CR2MagicWord, 2);	// this one is copied in the reverse order, its 0x5243 - check is it the same on windows and fix
+	
+	fStream.read((char*)&header->CR2MagicWord + 1, 1);				// this works but it's probably wrong, probably has to do with byteordering
+	fStream.read((char*)&header->CR2MagicWord, 1);
+
 	fStream.read((char*)&header->CR2VerMajor, 1);
 	fStream.read((char*)&header->CR2VerMinor, 1);
 	fStream.read((char*)&header->RawIFDOffset, 4);
