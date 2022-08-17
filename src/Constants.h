@@ -20,9 +20,31 @@
 #define CR2_IFD_TAG_STRIP_BYTE_COUNTS			0x117
 #define CR2_IFD_TAG_X_RESOLUTION				0x11A
 #define CR2_IFD_TAG_Y_RESOLUTION				0x11B
-#define CR2_IFD_TAG_RESOLUTION_UNIT				0x12B
+#define CR2_IFD_TAG_RESOLUTION_UNIT				0x128
 #define CR2_IFD_TAG_DATE_TIME					0x132
 #define CR2_IFD_TAG_EXIF						0x8769
 #define CR2_IFD_TAG_GPS_DATA					0x8825
+#define CR2_IDF_TAG_EXIF						0x8769
+
+
+// currently ignored
+#define CR2_IDF_TAG_ARTIST						0x13B
+#define CR2_IDF_TAG_HOST_COMPUTER				0x13C
+#define CR2_IDF_TAG_XMP							0x2BC
+#define CR2_IDF_TAG_COPYRIGHT					0x8298
+
+// Misc constants
+#define CR2_IDF_TAG_DATE_TIME_SIZE 20
+
+
+/*	Error list */
+constexpr const char* CR2ERR_UNIMPLEMENTED							= "Unimplemented function or logic";
+constexpr const char* CR2ERR_FILE_NOT_FOUND 						= "File not found";
+constexpr const char* CR2ERR_HEADER_FAULTY_BYTE_CODE				= "Unknown byte code. File might not be CR2 format";
+constexpr const char* CR2ERR_HEADER_FAULTY_CR2_MAGIC_WORD			= "Unknown CR2 magic word. File might not be CR2 format";
+constexpr const char* CR2ERR_IDF_UNKNOWN_TAG_ID						= "Unknown IDF Tag ID";
+constexpr const char* CR2ERR_IDF_BPS_ALREADY_ALLOCATED				= "Bits per sample is already allocated. This should not occur more than once per frame";
+constexpr const char* CR2ERR_IDF_STRIP_OFFSETS_ALREADY_ALLOCATED	= "Strip offsets already allocated. This should not oocur more than once per frame";
+
 
 #endif // CONSTANTS_H

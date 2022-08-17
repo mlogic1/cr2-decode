@@ -5,8 +5,8 @@
 
 struct CR2IDFEntry
 {
-	short TagID;
-    short TagType;
+	uint16_t TagID;
+    uint16_t TagType;
     uint32_t Values;
     uint32_t Value;
 };
