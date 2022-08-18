@@ -8,7 +8,7 @@
 struct CR2ImageData
 {
 	CR2Header Header;
-	std::vector<CR2IDFFrame> Frames;
+	std::vector<CR2IDFFrame*> Frames;
 };
 
 #endif // CR2_IMAGE_DATA_H

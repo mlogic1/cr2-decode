@@ -2,8 +2,8 @@
 #include "CR2IDFEntry.h"
 #include "CR2IDFFrame.h"
 #include "Constants.h"
+#include "CR2FileImpl.h"
 #include <CR2Decoder.h>
-#include <CR2File.h>
 #include <fstream>
 #include <string.h>
 #include <iostream>
@@ -72,7 +72,8 @@ static void _CR2TestIDF0(CR2IDFFrame* frame, CR2IDFEntry* idfEntry, std::ifstrea
 
 			frame->StripOffsetsLen = idfEntry->Values;
 			frame->StripOffsets = new uint32_t[frame->StripOffsetsLen];
-			inStream.read((char*)frame->StripOffsets, frame->StripOffsetsLen * sizeof(uint32_t));		// TODO: Unsure if this is correct - needs checking
+			// inStream.read((char*)frame->StripOffsets, frame->StripOffsetsLen * sizeof(uint32_t));		// TODO: Unsure if this is correct - needs checking
+			frame->StripOffsets[0] = idfEntry->Value;
 			inStream.seekg(curPos);
 			break;
 		}
@@ -140,7 +141,7 @@ static void _CR2TestIDF0(CR2IDFFrame* frame, CR2IDFEntry* idfEntry, std::ifstrea
 			
 		default:
 			const std::string error = std::string(CR2ERR_IDF_UNKNOWN_TAG_ID) + ": " + std::to_string(idfEntry->TagID);
-			throw std::runtime_error(error);
+			throw std::runtime_error(error);	// TODO: this needs to be handled better. Either add all possible tags, or write warnings instead of throwing errors
 			break;
 	}
 }
@@ -148,7 +149,6 @@ static void _CR2TestIDF0(CR2IDFFrame* frame, CR2IDFEntry* idfEntry, std::ifstrea
 /* private API */
 static void _C2DDecodeHeader(CR2Header* header, std::ifstream& fStream)
 {
-	// size_t HDDR_SIZE = sizeof(CR2Header);
 	fStream.read((char*)&header->ByteOrdering, 2);
 	fStream.read((char*)&header->TiffMagicWord, 2);
 	fStream.read((char*)&header->TiffOffset, 4);
@@ -188,39 +188,47 @@ static void _C2DDecodeIDF(CR2IDFEntry* entry, std::ifstream& fStream)
 
 CR2File* C2DLoad(const char* path)
 {
-	std::ifstream inStream(path, std::ios::in | std::ios::binary);
-	if (inStream.fail()){
+	std::ifstream* inStream = new std::ifstream(path, std::ios::in | std::ios::binary);
+	if (inStream->fail()){
+		delete inStream;
 		throw std::runtime_error(CR2ERR_FILE_NOT_FOUND);
 	}
-
-	CR2ImageData* imData = new CR2ImageData();			// TODO: this is not cleaned up
-	_C2DDecodeHeader(&imData->Header, inStream);
+	CR2File* f = new CR2File();
+	f->ImageData = new CR2ImageData();
+	f->InStream = inStream;
+	_C2DDecodeHeader(&f->ImageData->Header, *f->InStream);
 
 	uint16_t numIFDEntries;
-	inStream.read((char*)&numIFDEntries, 2);
+	f->InStream->read((char*)&numIFDEntries, 2);
+	
 	// read the rest of the content
-
 	printf("Found %d IDF Entries\n", numIFDEntries);
-	CR2IDFFrame idfFrame;
+	CR2IDFFrame* idfFrame = new CR2IDFFrame();
 	CR2IDFEntry* idfEntries = new CR2IDFEntry[numIFDEntries];
 	for (int i = 0; i < numIFDEntries; ++i)
 	{
 		printf("Parsing IDF%d\n", i);
 		
-		_C2DDecodeIDF(idfEntries + i, inStream);
-		_CR2TestIDF0(&idfFrame, idfEntries + i, inStream);	
+		_C2DDecodeIDF(idfEntries + i, *f->InStream);
+		_CR2TestIDF0(idfFrame, idfEntries + i, *f->InStream);	
 	}
 	
-	imData->Frames.emplace_back(idfFrame);
+	f->ImageData->Frames.emplace_back(idfFrame);
 	delete[] idfEntries;
-
+	
 	// TODO: read next IFD offset and parse other IFD's
-	CR2File* f = new CR2File();
+	
 	return f;
 }
 
 void C2DFree(CR2File* file)
 {
+	file->InStream->close();
+	delete file->InStream;
+	for (CR2IDFFrame* frame : file->ImageData->Frames)
+		delete frame;
+	file->ImageData->Frames.clear();
+	delete file->ImageData;
 	delete file;
 	file = nullptr;
 }

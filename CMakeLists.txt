@@ -7,7 +7,9 @@ SET (SRC_DIR ./src)
 SET (INCLUDE_DIR ./include)
 
 SET (SRC_FILES
-	${SRC_DIR}/CR2Decoder.cpp)
+	${SRC_DIR}/CR2Decoder.cpp
+	${SRC_DIR}/CR2File.cpp
+	)
 
 add_library(libcr2-decode ${SRC_FILES})
 

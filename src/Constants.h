@@ -45,6 +45,7 @@ constexpr const char* CR2ERR_HEADER_FAULTY_CR2_MAGIC_WORD			= "Unknown CR2 magic
 constexpr const char* CR2ERR_IDF_UNKNOWN_TAG_ID						= "Unknown IDF Tag ID";
 constexpr const char* CR2ERR_IDF_BPS_ALREADY_ALLOCATED				= "Bits per sample is already allocated. This should not occur more than once per frame";
 constexpr const char* CR2ERR_IDF_STRIP_OFFSETS_ALREADY_ALLOCATED	= "Strip offsets already allocated. This should not oocur more than once per frame";
+constexpr const char* CR2ERR_FILE_EXTRACT_IDF0_IDF0_NOT_PRESENT		= "There are no frames present in this file";
 
 
 #endif // CONSTANTS_H
