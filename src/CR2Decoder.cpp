@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <stdexcept>
 
-static void _CR2TestIDF0(CR2IDFFrame* frame, CR2IDFEntry* idfEntry, std::ifstream& inStream)
+static void _CR2DecodeIDFEntry(CR2IDFFrame* frame, CR2IDFEntry* idfEntry, std::ifstream& inStream)
 {
 	switch (idfEntry->TagID)
 	{
@@ -173,7 +173,7 @@ static void _C2DDecodeHeader(CR2Header* header, std::ifstream& fStream)
 	}
 }
 
-static void _C2DDecodeIDF(CR2IDFEntry* entry, std::ifstream& fStream)
+static void _C2DReadIDFEntry(CR2IDFEntry* entry, std::ifstream& fStream)
 {
 	if (sizeof(CR2IDFEntry) == 12)
 	{
@@ -193,6 +193,7 @@ CR2File* C2DLoad(const char* path)
 		delete inStream;
 		throw std::runtime_error(CR2ERR_FILE_NOT_FOUND);
 	}
+	
 	CR2File* f = new CR2File();
 	f->ImageData = new CR2ImageData();
 	f->InStream = inStream;
@@ -207,10 +208,10 @@ CR2File* C2DLoad(const char* path)
 	CR2IDFEntry* idfEntries = new CR2IDFEntry[numIFDEntries];
 	for (int i = 0; i < numIFDEntries; ++i)
 	{
-		printf("Parsing IDF%d\n", i);
+		printf("Parsing IDF entry%d\n", i);
 		
-		_C2DDecodeIDF(idfEntries + i, *f->InStream);
-		_CR2TestIDF0(idfFrame, idfEntries + i, *f->InStream);	
+		_C2DReadIDFEntry(idfEntries + i, *f->InStream);
+		_CR2DecodeIDFEntry(idfFrame, idfEntries + i, *f->InStream);
 	}
 	
 	f->ImageData->Frames.emplace_back(idfFrame);
