@@ -22,6 +22,16 @@ struct CR2IDFFrame
 	uint16_t ResolutionUnit = 0;
 	std::string dateTime;
 
+	uint32_t ExifSubDirOffset = 0;
+
+	uint32_t ThumbnailOffset = 0;
+	uint32_t ThumbnailLength = 0;
+
+	uint16_t PhotoMetricInterpretation = 0;
+	uint16_t SamplesPerPixel = 0;
+	uint16_t RowsPerStrip = 0;
+	uint16_t PlanarConfiguration = 0;
+
 	~CR2IDFFrame()
 	{
 		delete[] BitsPerSample;

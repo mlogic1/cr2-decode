@@ -24,8 +24,28 @@
 #define CR2_IFD_TAG_DATE_TIME					0x132
 #define CR2_IFD_TAG_EXIF						0x8769
 #define CR2_IFD_TAG_GPS_DATA					0x8825
-#define CR2_IDF_TAG_EXIF						0x8769
+#define CR2_IFD_TAG_THUMB_OFFSET				0x0201
+#define CR2_IFD_TAG_THUMB_LENGTH				0x0202
+#define CR2_IFD_TAG_PHOTOMETRIC_INTERPRETATION	0x0106
+#define CR2_IFD_TAG_SAMPLES_PER_PIXEL			0x0115
+#define CR2_IFD_TAG_ROWS_PER_STRIP				0x0116
+#define CR2_IFD_TAG_PLANAR_CONFIGURATION		0x011C
 
+// EXIF constants
+#define CR2_EXIF_TAG_EXPOSURE_TIME				0x829A
+#define CR2_EXIF_TAG_f_NUMBER					0x829D
+#define CR2_EXIF_TAG_MAKERNOTE_OFFSET			0x927C
+
+
+// Makernote constants
+#define CR2_MAKERNOTE_TAG_CAMERA_SETTINGS		0x0001
+#define CR2_MAKERNOTE_TAG_FOCAL_LENGTH			0x0002
+#define CR2_MAKERNOTE_TAG_IMAGE_TYPE			0x0006
+#define CR2_MAKERNOTE_TAG_FIRMWARE_VERSION		0x0007
+#define CR2_MAKERNOTE_TAG_SERIAL_NUMBER			0x000C
+#define CR2_MAKERNOTE_TAG_FILE_LENGTH			0x000E
+#define CR2_MAKERNOTE_TAG_MODEL_ID				0x0010
+#define CR2_MAKERNOTE_TAG_COLOR_SPACE			0x00B4
 
 // currently ignored
 #define CR2_IDF_TAG_ARTIST						0x13B
@@ -45,6 +65,7 @@ constexpr const char* CR2ERR_HEADER_FAULTY_CR2_MAGIC_WORD			= "Unknown CR2 magic
 constexpr const char* CR2ERR_IDF_UNKNOWN_TAG_ID						= "Unknown IDF Tag ID";
 constexpr const char* CR2ERR_IDF_BPS_ALREADY_ALLOCATED				= "Bits per sample is already allocated. This should not occur more than once per frame";
 constexpr const char* CR2ERR_IDF_STRIP_OFFSETS_ALREADY_ALLOCATED	= "Strip offsets already allocated. This should not oocur more than once per frame";
+constexpr const char* CR2ERR_IDF_EXIF_OFFSET_MISSING				= "EXIF offset tag not found in IDF frame";
 constexpr const char* CR2ERR_FILE_EXTRACT_IDF0_IDF0_NOT_PRESENT		= "There are no frames present in this file";
 
 

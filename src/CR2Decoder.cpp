@@ -1,6 +1,7 @@
 #include "CR2ImageData.h"
 #include "CR2IDFEntry.h"
 #include "CR2IDFFrame.h"
+#include "CR2MakerNote.h"
 #include "Constants.h"
 #include "CR2FileImpl.h"
 #include <CR2Decoder.h>
@@ -10,7 +11,9 @@
 #include <stdio.h>
 #include <stdexcept>
 
-static void _CR2DecodeIDFEntry(CR2IDFFrame* frame, CR2IDFEntry* idfEntry, std::ifstream& inStream)
+static void _C2DReadIDFEntry(CR2IDFEntry* entry, std::ifstream& fStream);
+
+static void _C2DDecodeIDFEntry(CR2IDFFrame* frame, CR2IDFEntry* idfEntry, std::ifstream& inStream)
 {
 	switch (idfEntry->TagID)
 	{
@@ -127,23 +130,128 @@ static void _CR2DecodeIDFEntry(CR2IDFFrame* frame, CR2IDFEntry* idfEntry, std::i
 			break;
 		}
 
+		case CR2_IFD_TAG_THUMB_OFFSET:
+			frame->ThumbnailOffset = idfEntry->Value;
+			break;
+
+		case CR2_IFD_TAG_THUMB_LENGTH:
+			frame->ThumbnailLength = idfEntry->Value;
+			break;
+
 		case CR2_IDF_TAG_ARTIST:
 		case CR2_IDF_TAG_HOST_COMPUTER:
 		case CR2_IDF_TAG_XMP:
 		case CR2_IDF_TAG_COPYRIGHT:
 		break;
 
-		case CR2_IDF_TAG_EXIF:
+		case CR2_IFD_TAG_EXIF:
 		{
-			int breakpoint = 1;
+			frame->ExifSubDirOffset = idfEntry->Value;
 			break;
 		}
+
+		case CR2_IFD_TAG_PHOTOMETRIC_INTERPRETATION:
+			frame->PhotoMetricInterpretation = idfEntry->Value;
+			break;
+
+		case CR2_IFD_TAG_SAMPLES_PER_PIXEL:
+			frame->SamplesPerPixel = idfEntry->Value;
+			break;
+
+		case CR2_IFD_TAG_ROWS_PER_STRIP:
+			frame->RowsPerStrip = idfEntry->Value;
+			break;
+
+		case CR2_IFD_TAG_PLANAR_CONFIGURATION:
+			frame->PlanarConfiguration = idfEntry->Value;
+			break;
 			
 		default:
 			const std::string error = std::string(CR2ERR_IDF_UNKNOWN_TAG_ID) + ": " + std::to_string(idfEntry->TagID);
-			throw std::runtime_error(error);	// TODO: this needs to be handled better. Either add all possible tags, or write warnings instead of throwing errors
+			// throw std::runtime_error(error);	// TODO: this needs to be handled better. Either add all possible tags, or write warnings instead of throwing errors
 			break;
 	}
+}
+
+static void _C2DDecodeExifEntry(CR2ExifData* exifData, CR2IDFEntry* idfEntry, std::ifstream& inStream)
+{
+	switch (idfEntry->TagID)
+	{
+			case CR2_EXIF_TAG_EXPOSURE_TIME:
+			{
+				std::streampos curPos = inStream.tellg();
+				inStream.seekg(idfEntry->Value);
+				
+				inStream.read((char*)&exifData->ExposureTime, sizeof(exifData->ExposureTime));
+				inStream.seekg(curPos);
+				break;
+			}
+
+			case CR2_EXIF_TAG_f_NUMBER:
+			{
+				std::streampos curPos = inStream.tellg();
+				inStream.seekg(idfEntry->Value);
+				inStream.read((char*)&exifData->fNumber, sizeof(exifData->fNumber));
+				inStream.seekg(curPos);
+				break;
+			}
+
+			case CR2_EXIF_TAG_MAKERNOTE_OFFSET:
+			{
+				exifData->MakerNoteoffset = idfEntry->Value;
+				break;
+			}
+		default:
+			const std::string error = std::string(CR2ERR_IDF_UNKNOWN_TAG_ID) + ": " + std::to_string(idfEntry->TagID);
+			// throw std::runtime_error(error);	// TODO: this needs to be handled better. Either add all possible tags, or write warnings instead of throwing errors
+			break;
+	}
+}
+
+
+static void _C2DDecodeMakerNoteEntry(CR2MakerNote* makerNote, CR2IDFEntry* idfEntry, std::ifstream& inStream)
+{
+	switch (idfEntry->TagID)
+	{
+		case CR2_MAKERNOTE_TAG_CAMERA_SETTINGS:
+		{
+			std::streampos curPos = inStream.tellg();
+			inStream.seekg(idfEntry->Value);
+			makerNote->CameraSettings = new uint16_t[idfEntry->Values];
+			inStream.read((char*)makerNote->CameraSettings, idfEntry->Values * sizeof(uint16_t));
+			inStream.seekg(curPos);
+			break;
+		}
+
+		case CR2_MAKERNOTE_TAG_FOCAL_LENGTH:
+		{
+			std::streampos curPos = inStream.tellg();
+			inStream.seekg(idfEntry->Value);
+			makerNote->FocalLength = new uint16_t[idfEntry->Values];
+			makerNote->FocalLengthLen = idfEntry->Values;
+			inStream.read((char*)makerNote->FocalLength, idfEntry->Values * sizeof(uint16_t));
+			inStream.seekg(curPos);
+			break;
+		}
+
+		case CR2_MAKERNOTE_TAG_IMAGE_TYPE:
+		{
+			std::streampos curPos = inStream.tellg();
+			inStream.seekg(idfEntry->Value);
+			
+			char* buffer = new char[idfEntry->Values];
+			inStream.read(buffer, idfEntry->Values);
+			makerNote->ImageType = buffer;
+			delete[] buffer;
+			inStream.seekg(curPos);
+			break;
+		}
+
+		default:
+			const std::string error = std::string(CR2ERR_IDF_UNKNOWN_TAG_ID) + ": " + std::to_string(idfEntry->TagID);
+			// TODO: add this to the logging system
+			break;
+	}	
 }
 
 /* private API */
@@ -181,8 +289,7 @@ static void _C2DReadIDFEntry(CR2IDFEntry* entry, std::ifstream& fStream)
 	}
 	else
 	{
-		// manually read the 12 bytes in case there was memory padding added, this is just a fallback in case the struct is not exacly the size of idf
-		throw std::runtime_error(CR2ERR_UNIMPLEMENTED);
+		throw std::runtime_error(CR2ERR_UNIMPLEMENTED);	// manually read the 12 bytes in case there was memory padding added, this is just a fallback in case the struct is not exacly the size of idf
 	}
 }
 
@@ -195,15 +302,18 @@ CR2File* C2DLoad(const char* path)
 	}
 	
 	CR2File* f = new CR2File();
-	f->ImageData = new CR2ImageData();
 	f->InStream = inStream;
+	f->ImageData = new CR2ImageData();
+	
 	_C2DDecodeHeader(&f->ImageData->Header, *f->InStream);
 
-	uint16_t numIFDEntries;
-	f->InStream->read((char*)&numIFDEntries, 2);
+	//=============================================================
+	//							IDF #0							 //
+	//=============================================================
+	uint16_t numIFDEntries = 0;
+	f->InStream->read((char*)&numIFDEntries, sizeof(numIFDEntries));
 	
-	// read the rest of the content
-	printf("Found %d IDF Entries\n", numIFDEntries);
+	printf("IDF #0. Found %d IDF Entries\n", numIFDEntries);
 	CR2IDFFrame* idfFrame = new CR2IDFFrame();
 	CR2IDFEntry* idfEntries = new CR2IDFEntry[numIFDEntries];
 	for (int i = 0; i < numIFDEntries; ++i)
@@ -211,14 +321,81 @@ CR2File* C2DLoad(const char* path)
 		printf("Parsing IDF entry%d\n", i);
 		
 		_C2DReadIDFEntry(idfEntries + i, *f->InStream);
-		_CR2DecodeIDFEntry(idfFrame, idfEntries + i, *f->InStream);
+		_C2DDecodeIDFEntry(idfFrame, idfEntries + i, *f->InStream);
 	}
 	
 	f->ImageData->Frames.emplace_back(idfFrame);
 	delete[] idfEntries;
+
+	uint32_t nextOffset = 0;																		// next IDF offset, keep parsing while it's different than 0
+	f->InStream->read((char*)&nextOffset, sizeof(uint32_t));
+
+	if (idfFrame->ExifSubDirOffset != 0)															// check if exif is present, if so, parse exif data
+	{
+		f->InStream->seekg(idfFrame->ExifSubDirOffset);
+		uint16_t numExifEntries = 0;
+		f->InStream->read((char*)&numExifEntries, sizeof(numExifEntries));
+		printf("Exif data detected. Found %d exif IDF entries.\n", numExifEntries);
+
+		idfEntries = new CR2IDFEntry[numExifEntries];
+		for(int i = 0; i < numExifEntries; ++i)
+		{
+			_C2DReadIDFEntry(idfEntries + i, *f->InStream);
+			_C2DDecodeExifEntry(&f->ImageData->ExifData, idfEntries + i, *f->InStream);
+		}
+		delete[] idfEntries;
+
+		if (f->ImageData->ExifData.MakerNoteoffset != 0)											// check if makernote is present, if so, parse makernote data
+		{
+			f->InStream->seekg(f->ImageData->ExifData.MakerNoteoffset);
+			uint16_t numMakerNoteEntries = 0;
+			f->InStream->read((char*)&numMakerNoteEntries, sizeof(numMakerNoteEntries));
+			printf("Makernote data detected. Found %d makernote IDF entries.\n", numMakerNoteEntries);
+			
+			idfEntries = new CR2IDFEntry[numMakerNoteEntries];
+			for(int i = 0; i < numMakerNoteEntries; ++i)
+			{
+				_C2DReadIDFEntry(idfEntries + i, *f->InStream);
+				_C2DDecodeMakerNoteEntry(&f->ImageData->MakerNotes, idfEntries + i, *f->InStream);
+			}
+			delete[] idfEntries;
+		}
+	}
+
+	//=============================================================
+	//							IDF #1							 //
+	//=============================================================
+	idfFrame = new CR2IDFFrame();
+	f->InStream->seekg(nextOffset); 
+	f->InStream->read((char*)&numIFDEntries, sizeof(uint16_t));
+	idfEntries = new CR2IDFEntry[numIFDEntries];
+	printf("IDF #1. Found %d IDF Entries\n", numIFDEntries);
+	for (int i = 0; i < numIFDEntries; ++i)
+	{
+		_C2DReadIDFEntry(idfEntries + i, *f->InStream);
+		_C2DDecodeIDFEntry(idfFrame, idfEntries + i, *f->InStream);
+	}
+	delete[] idfEntries;
+	f->ImageData->Frames.emplace_back(idfFrame);
+	f->InStream->read((char*)&nextOffset, sizeof(uint32_t));
 	
-	// TODO: read next IFD offset and parse other IFD's
-	
+
+	//=============================================================
+	//							IDF #2							 //
+	//=============================================================
+	idfFrame = new CR2IDFFrame();
+	f->InStream->seekg(nextOffset);
+	f->InStream->read((char*)&numIFDEntries, sizeof(numIFDEntries));
+	idfEntries = new CR2IDFEntry[numIFDEntries];
+	printf("IDF #2. Found %d IDF Entries\n", numIFDEntries);
+	for (int i = 0; i < numIFDEntries; ++i)
+	{
+		_C2DReadIDFEntry(idfEntries + i, *f->InStream);
+		_C2DDecodeIDFEntry(idfFrame, idfEntries + i, *f->InStream);
+	}
+	f->ImageData->Frames.emplace_back(idfFrame);
+	delete[] idfEntries;
+
 	return f;
 }
 
@@ -226,9 +403,6 @@ void C2DFree(CR2File* file)
 {
 	file->InStream->close();
 	delete file->InStream;
-	for (CR2IDFFrame* frame : file->ImageData->Frames)
-		delete frame;
-	file->ImageData->Frames.clear();
 	delete file->ImageData;
 	delete file;
 	file = nullptr;
