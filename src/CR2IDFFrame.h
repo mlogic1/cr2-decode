@@ -32,6 +32,8 @@ struct CR2IDFFrame
 	uint16_t RowsPerStrip = 0;
 	uint16_t PlanarConfiguration = 0;
 
+	uint16_t RawImageSegmentation[3];
+
 	~CR2IDFFrame()
 	{
 		delete[] BitsPerSample;

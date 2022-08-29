@@ -166,6 +166,16 @@ static void _C2DDecodeIDFEntry(CR2IDFFrame* frame, CR2IDFEntry* idfEntry, std::i
 			frame->PlanarConfiguration = idfEntry->Value;
 			break;
 			
+		case CR2_IFD_TAG_RAW_IMAGE_SEGMENTATION:
+		{
+			std::streampos curPos = inStream.tellg();
+			inStream.seekg(idfEntry->Value);
+			inStream.read((char*)frame->RawImageSegmentation, sizeof(frame->RawImageSegmentation));
+			int sizereminder = *(frame->RawImageSegmentation + 1);
+			inStream.seekg(curPos);
+			break;
+		}
+
 		default:
 			const std::string error = std::string(CR2ERR_IDF_UNKNOWN_TAG_ID) + ": " + std::to_string(idfEntry->TagID);
 			// throw std::runtime_error(error);	// TODO: this needs to be handled better. Either add all possible tags, or write warnings instead of throwing errors
@@ -393,8 +403,26 @@ CR2File* C2DLoad(const char* path)
 		_C2DReadIDFEntry(idfEntries + i, *f->InStream);
 		_C2DDecodeIDFEntry(idfFrame, idfEntries + i, *f->InStream);
 	}
-	f->ImageData->Frames.emplace_back(idfFrame);
 	delete[] idfEntries;
+	f->ImageData->Frames.emplace_back(idfFrame);
+	f->InStream->read((char*)&nextOffset, sizeof(uint32_t));
+
+	//=============================================================
+	//							IDF #3							 //
+	//=============================================================
+	idfFrame = new CR2IDFFrame();
+	f->InStream->seekg(nextOffset);
+	f->InStream->read((char*)&numIFDEntries, sizeof(numIFDEntries));
+	idfEntries = new CR2IDFEntry[numIFDEntries];
+	for (int i = 0; i < numIFDEntries; ++i)
+	{
+		_C2DReadIDFEntry(idfEntries + i, *f->InStream);
+		_C2DDecodeIDFEntry(idfFrame, idfEntries + i, *f->InStream);
+	}
+	delete[] idfEntries;
+	f->ImageData->Frames.emplace_back(idfFrame);
+	f->InStream->read((char*)&nextOffset, sizeof(nextOffset));
+	// TODO: handle nextoffset = 0
 
 	return f;
 }
