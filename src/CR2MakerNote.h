@@ -13,7 +13,6 @@ struct CR2MakerNote
 
 	std::string ImageType = "";
 
-
 	~CR2MakerNote()
 	{
 		if (CameraSettings)
