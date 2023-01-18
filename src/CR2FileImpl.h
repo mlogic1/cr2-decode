@@ -11,5 +11,4 @@ struct CR2File
 	std::ifstream* InStream = nullptr;
 };
 
-
 #endif // CR2_FILE_IMPL_H

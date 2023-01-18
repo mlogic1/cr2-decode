@@ -126,7 +126,7 @@ static void _C2DDecodeIDFEntry(CR2IDFFrame* frame, CR2IDFEntry* idfEntry, std::i
 			char buff[CR2_IDF_TAG_DATE_TIME_SIZE];
 			inStream.read(buff, CR2_IDF_TAG_DATE_TIME_SIZE);
 			frame->dateTime = std::string(buff);
-			inStream.seekg(curPos);	
+			inStream.seekg(curPos);
 			break;
 		}
 
@@ -376,7 +376,7 @@ CR2File* C2DLoad(const char* path)
 	//							IDF #1							 //
 	//=============================================================
 	idfFrame = new CR2IDFFrame();
-	f->InStream->seekg(nextOffset); 
+	f->InStream->seekg(nextOffset);
 	f->InStream->read((char*)&numIFDEntries, sizeof(uint16_t));
 	idfEntries = new CR2IDFEntry[numIFDEntries];
 	printf("IDF #1. Found %d IDF Entries\n", numIFDEntries);
@@ -414,6 +414,7 @@ CR2File* C2DLoad(const char* path)
 	f->InStream->seekg(nextOffset);
 	f->InStream->read((char*)&numIFDEntries, sizeof(numIFDEntries));
 	idfEntries = new CR2IDFEntry[numIFDEntries];
+	printf("IDF #3. Found %d IDF Entries\n", numIFDEntries);
 	for (int i = 0; i < numIFDEntries; ++i)
 	{
 		_C2DReadIDFEntry(idfEntries + i, *f->InStream);

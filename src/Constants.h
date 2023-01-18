@@ -54,6 +54,10 @@
 #define CR2_IDF_TAG_XMP							0x2BC
 #define CR2_IDF_TAG_COPYRIGHT					0x8298
 
+// Lossless jpeg
+#define CR2_IMAGE3_SOI							0xFFD8
+#define CR2_IMAGE3_DHT_MARKER					0xFFC4
+
 // Misc constants
 #define CR2_IDF_TAG_DATE_TIME_SIZE 20
 
@@ -68,6 +72,7 @@ constexpr const char* CR2ERR_IDF_BPS_ALREADY_ALLOCATED				= "Bits per sample is 
 constexpr const char* CR2ERR_IDF_STRIP_OFFSETS_ALREADY_ALLOCATED	= "Strip offsets already allocated. This should not oocur more than once per frame";
 constexpr const char* CR2ERR_IDF_EXIF_OFFSET_MISSING				= "EXIF offset tag not found in IDF frame";
 constexpr const char* CR2ERR_FILE_EXTRACT_IDF0_IDF0_NOT_PRESENT		= "There are no frames present in this file";
-
+constexpr const char* CR2ERR_IMAGE3_SOI_VALIDATE					= "Unable to extract Lossless jpeg. Reason: Unable to validate SOI";
+constexpr const char* CR2ERR_IMAGE3_DHT_MARKER_VALIDATE				= "Unable to extract Lossless jpeg. Reason: Unable to validate DHT marker";
 
 #endif // CONSTANTS_H

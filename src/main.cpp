@@ -6,8 +6,8 @@
 #include <vector>
 #include <set>
 
-// constexpr const char* SAMPLE_IMAGE_FILE = "../../sample/canon-sample.CR2";
-constexpr const char* SAMPLE_IMAGE_FILE = "../../sample/IMG_2026.CR2";
+constexpr const char* SAMPLE_IMAGE_FILE = "../sample/canon-sample.CR2";
+// constexpr const char* SAMPLE_IMAGE_FILE = "../../sample/IMG_2026.CR2";
 
 // List of possible options
 enum class ArgumentOption
@@ -96,6 +96,8 @@ int main(int argc, char* argv[])
 		std::cout << "Unable to decode file" << std::endl;
 		return -1;
 	}
+
+	CR2FileExtractLosslessJpeg(f, "/home/filip/Desktop/test/loss.less");
 
 	if (arguments.Options.find(ArgumentOption::ExtractJpeg) != arguments.Options.end())
 	{
