@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <stdlib.h>
 #include <iostream>
+#include <bitset>
 
 // https://www.geeksforgeeks.org/huffman-coding-greedy-algo-3/
 
@@ -38,11 +39,12 @@ void CR2FileExtractPreviewImage(CR2File* file, const std::string& outputPath)
 
 void CR2FileExtractLosslessJpeg(CR2File* file, const char* outputPath)
 {
+	// https://www.swetake.com/photo/cr2/cr2-7_en.html
 	std::ifstream* fStream = file->InStream;
 	const std::streampos curPos = fStream->tellg();
 
 	const CR2IDFFrame* frame = file->ImageData->Frames.at(3);
-	std::cout <<"num frames: " <<file->ImageData->Frames.size()<<std::endl;
+	// std::cout <<"num frames: " << file->ImageData->Frames.size() << std::endl;
 
 	fStream->seekg(frame->StripOffsets[0]);
 	uint16_t soi = 0;
@@ -78,17 +80,23 @@ void CR2FileExtractLosslessJpeg(CR2File* file, const char* outputPath)
 	char Tc = (table >> 4);
 	char Th = ((table >> 4) & TC_LOW);
 	std::cout << "Table class: " << (int)Tc << std::endl;
-	std::cout << "Table destination: " << (int)Th << std::endl;
+	std::cout << "Table destination identifier: " << (int)Th << std::endl;
 
 	// WIP - testing -----------
 	char huffCodes[16];
-	
-	int freq[16];
 	fStream->read(huffCodes, 16);
+	// int freq[16];
+	int code = 0;
+    for (int i = 0; i < 16; ++i) {
+        for (int j = 0; j < huffCodes[i]; ++j) {
+            std::bitset<16> binary(code);
+            std::cout << "Bit Length: " << i+1 << ", Huffman Code: " << binary << '\n';
+            ++code;
+        }
+        code <<= 1;
+    }
 
-	// continue here	
-	
-	HuffmanCodes(huffCodes, freq, 16);
+	// HuffmanCodes(huffCodes, freq, 16);
 	// --------------------------
 
 	/*

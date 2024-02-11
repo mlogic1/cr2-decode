@@ -328,7 +328,7 @@ CR2File* C2DLoad(const char* path)
 	CR2IDFEntry* idfEntries = new CR2IDFEntry[numIFDEntries];
 	for (int i = 0; i < numIFDEntries; ++i)
 	{
-		printf("Parsing IDF entry%d\n", i);
+		printf("Parsing IDF entry %d\n", i);	// not really needed here
 
 		_C2DReadIDFEntry(idfEntries + i, *f->InStream);
 		_C2DDecodeIDFEntry(idfFrame, idfEntries + i, *f->InStream);
